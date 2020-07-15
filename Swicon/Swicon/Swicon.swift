@@ -13,7 +13,7 @@ import Dispatch
 
 open class Swicon {
     
-    open static let instance = Swicon()
+    public static let instance = Swicon()
     
     fileprivate let load_queue = DispatchQueue(label: "com.swicon.font.load.queue", attributes: [])
     
@@ -59,9 +59,9 @@ open class Swicon {
             if iconName.hasPrefix(fontPrefix) {
                 let iconFont = fontsMap[fontPrefix]!
                 if let iconValue = iconFont.getIconValue(iconName) {
-                    let iconUnicodeValue = iconValue.substring(to: iconValue.characters.index(iconValue.startIndex, offsetBy: 1))
+                    let iconUnicodeValue = iconValue.substring(to: iconValue.index(iconValue.startIndex, offsetBy: 1))
                     if let uiFont = iconFont.getUIFont(fontSize) {
-                        let attrs = [NSFontAttributeName : uiFont]
+                        let attrs = [NSAttributedString.Key.font : uiFont]
                         return NSMutableAttributedString(string:iconUnicodeValue, attributes:attrs)
                     }
                 }
@@ -78,20 +78,20 @@ open class Swicon {
         UIGraphicsBeginImageContextWithOptions(imageSize, false, 0.0);
         let attString = getNSMutableAttributedString(iconName, fontSize: iconSize)
         if attString != nil {
-            attString?.addAttributes([NSForegroundColorAttributeName: iconColour, NSParagraphStyleAttributeName: style], range: NSMakeRange(0, attString!.length))
+            attString?.addAttributes([NSAttributedString.Key.foregroundColor: iconColour, NSAttributedString.Key.paragraphStyle: style], range: NSMakeRange(0, attString!.length))
             // get the target bounding rect in order to center the icon within the UIImage:
             let ctx = NSStringDrawingContext()
             let boundingRect = attString!.boundingRect(with: CGSize(width: iconSize, height: iconSize), options: NSStringDrawingOptions.usesDeviceMetrics, context: ctx)
-            
-            attString!.draw(in: CGRect(x: (imageSize.width/2.0) - boundingRect.size.width/2.0, y: (imageSize.height/2.0) - boundingRect.size.height/2.0, width: imageSize.width, height: imageSize.height))
-            
+            attString!.draw(in: CGRect(x: 0,//(imageSize.width/2.0) - boundingRect.size.width/2.0,
+                                       y: 0,//(imageSize.height/2.0) - boundingRect.size.height/2.0,
+                                       width: imageSize.width, height: imageSize.height))
+
             var iconImage = UIGraphicsGetImageFromCurrentImageContext()
             UIGraphicsEndImageContext()
             
             if(iconImage?.responds(to: #selector(UIImage.withRenderingMode(_:))))!{
-                iconImage = iconImage?.withRenderingMode(UIImageRenderingMode.alwaysOriginal)
+                iconImage = iconImage?.withRenderingMode(UIImage.RenderingMode.alwaysOriginal)
             }
-            
             return iconImage!
         } else {
             return UIImage()
@@ -215,7 +215,7 @@ private func loadFontFromFile(_ fontFileName: String, forClass: AnyClass, isCust
         let provider = CGDataProvider(data: data as CFData)
         let font = CGFont(provider!)
         
-        if (!CTFontManagerRegisterGraphicsFont(font, nil)) {
+        if (!CTFontManagerRegisterGraphicsFont(font!, nil)) {
             NSLog("Failed to load font \(fontFileName)");
             return false
         } else {
